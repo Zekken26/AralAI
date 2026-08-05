@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AralAI — Frontend
 
-## Getting Started
+Next.js (App Router) frontend for the AralAI Grade 8 mathematics tutoring app.
+Serves student and teacher dashboards against the Django REST API in
+[`../backend`](../backend).
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router, Turbopack), React 19, TypeScript
+- Tailwind CSS v4
+- TanStack Query (server state), axios (HTTP), react-hook-form + zod (forms)
+- Vitest + Testing Library (unit/component), Playwright (e2e)
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # NEXT_PUBLIC_API_BASE_URL, defaults to http://localhost:8000/api/v1
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The backend must be running with CORS allowed for `http://localhost:3000`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd ../backend
+venv\Scripts\activate        # Windows; see backend docs for other platforms
+python manage.py runserver 8000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command          | What it does                                         |
+| ---------------- | ---------------------------------------------------- |
+| `npm run dev`    | Dev server on http://localhost:3000                  |
+| `npm run build`  | Production build (requires `.env.local`)             |
+| `npm run lint`   | ESLint                                               |
+| `npm run typecheck` | `tsc --noEmit`                                    |
+| `npm test`       | Vitest unit + component tests (jsdom, no backend)    |
+| `npm run e2e`    | Playwright against the real backend (see below)      |
 
-To learn more about Next.js, take a look at the following resources:
+## Testing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Unit/component tests run in jsdom and mock the network; they need no backend.
+`NEXT_PUBLIC_API_BASE_URL` is provided by the Vitest config.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+E2E tests start the Next dev server automatically but require the Django
+backend running on `:8000` (see Setup). Each test registers its own unique
+user:
 
-## Deploy on Vercel
+```bash
+npm run e2e
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Auth contract
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The backend returns JWT pairs in JSON bodies (no cookies), so there is no
+CSRF concern; CORS is handled server-side.
+
+- Access token: kept **in memory only** (`lib/auth.ts`).
+- Refresh token: kept in `sessionStorage` so reloads within the tab keep the
+  session. Rotation is supported: after every refresh the new pair is stored.
+- `lib/api-client.ts` attaches the Bearer token, deduplicates concurrent 401
+  refresh attempts, retries a failed request once, and fires
+  `aralai:session-expired` when the refresh fails so the app can redirect to
+  `/login`.
+- Route access is enforced client-side by `RouteGuard` (anonymous/student/
+  teacher modes) and the `AuthProvider` loading gate. The Django API remains
+  the security boundary.
+
+## Known limitations
+
+- Refresh token in `sessionStorage` is XSS-readable (no httpOnly cookie
+  support on the backend yet). Access token in memory limits the window.
+- ADMIN cannot register publicly and has no dashboard yet; ADMIN accounts
+  land on `/unauthorized`.
