@@ -1,0 +1,3072 @@
+openapi: 3.0.3
+info:
+  title: AralAI API
+  version: 0.1.0
+  description: 'Grade 8 Mathematics learning platform API. Endpoints are role-aware:
+    students and teachers see different data. Authenticate with a Bearer access token
+    obtained from POST /api/v1/auth/login/.'
+paths:
+  /api/v1/attempts/{id}/:
+    get:
+      operationId: v1_attempts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          description: ''
+  /api/v1/attempts/{id}/answers/{question_id}/:
+    put:
+      operationId: v1_attempts_answers_update
+      description: Saves or updates an answer while the attempt is IN_PROGRESS. The
+        answer format must match the question type (INVALID_ANSWER_FORMAT) and the
+        choice must belong to the question (CHOICE_NOT_IN_QUESTION). Client-supplied
+        is_correct/points fields are ignored.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: question_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAnswerRequest'
+            examples:
+              SaveMultiple-choiceAnswer:
+                value:
+                  selected_choice: 3
+                summary: Save multiple-choice answer
+              SaveNumericAnswer:
+                value:
+                  numeric_response: 4
+                summary: Save numeric answer
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SaveAnswerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SaveAnswerRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAnswer'
+          description: ''
+  /api/v1/attempts/{id}/results/:
+    get:
+      operationId: v1_attempts_results_retrieve
+      description: Historical result for a submitted attempt, including the student's
+        answer, correct answer, explanation, points awarded and total score. Remains
+        available even after the quiz window closes or the quiz is archived.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+          description: ''
+  /api/v1/attempts/{id}/submit/:
+    post:
+      operationId: v1_attempts_submit_create
+      description: 'Submits the attempt. All scoring is computed server-side: answered
+        questions are evaluated, unanswered questions earn zero, the percentage score
+        and passed result are persisted. Duplicate submission returns 409 QUIZ_ATTEMPT_ALREADY_SUBMITTED;
+        expired attempts return 409 QUIZ_ATTEMPT_EXPIRED.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: v1_auth_login_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: v1_auth_logout_create
+      description: |-
+        Takes a token and blacklists it. Must be used with the
+        `rest_framework_simplejwt.token_blacklist` app installed.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/me/:
+    get:
+      operationId: v1_auth_me_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/auth/refresh/:
+    post:
+      operationId: v1_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/auth/register/:
+    post:
+      operationId: v1_auth_register_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/v1/choices/{id}/:
+    patch:
+      operationId: v1_choices_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedChoiceWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedChoiceWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedChoiceWriteRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherChoice'
+          description: ''
+    delete:
+      operationId: v1_choices_destroy
+      description: Deleting a choice is blocked when it would invalidate an approved
+        question or a published quiz (CHOICE_DELETE_BLOCKED).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/classrooms/:
+    get:
+      operationId: v1_classrooms_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedClassroomList'
+          description: ''
+    post:
+      operationId: v1_classrooms_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassroomRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClassroomRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClassroomRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Classroom'
+          description: ''
+  /api/v1/classrooms/{id}/:
+    get:
+      operationId: v1_classrooms_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Classroom'
+          description: ''
+    put:
+      operationId: v1_classrooms_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassroomRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClassroomRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClassroomRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Classroom'
+          description: ''
+    patch:
+      operationId: v1_classrooms_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedClassroomUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedClassroomUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedClassroomUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassroomUpdate'
+          description: ''
+  /api/v1/classrooms/{id}/quiz-results/:
+    get:
+      operationId: v1_classrooms_quiz_results_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedClassroomQuizResultsList'
+          description: ''
+  /api/v1/classrooms/{id}/students/:
+    get:
+      operationId: v1_classrooms_students_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEnrollmentList'
+          description: ''
+  /api/v1/classrooms/join/:
+    post:
+      operationId: v1_classrooms_join_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinClassroomRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JoinClassroomRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JoinClassroomRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JoinClassroom'
+          description: ''
+  /api/v1/lessons/:
+    get:
+      operationId: v1_lessons_list
+      parameters:
+      - in: query
+        name: classroom
+        schema:
+          type: integer
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - ARCHIVED
+          - DRAFT
+          - PUBLISHED
+        description: |-
+          * `DRAFT` - Draft
+          * `PUBLISHED` - Published
+          * `ARCHIVED` - Archived
+      - in: query
+        name: topic
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLessonList'
+          description: ''
+    post:
+      operationId: v1_lessons_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+          description: ''
+  /api/v1/lessons/{id}/:
+    get:
+      operationId: v1_lessons_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+          description: ''
+    patch:
+      operationId: v1_lessons_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLessonRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLessonRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLessonRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+          description: ''
+  /api/v1/lessons/{id}/archive/:
+    post:
+      operationId: v1_lessons_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+          description: ''
+  /api/v1/lessons/{id}/publish/:
+    post:
+      operationId: v1_lessons_publish_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LessonRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+          description: ''
+  /api/v1/questions/{id}/:
+    get:
+      operationId: v1_questions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuestion'
+          description: ''
+    patch:
+      operationId: v1_questions_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedQuestionWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedQuestionWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedQuestionWriteRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuestion'
+          description: ''
+  /api/v1/questions/{id}/approve/:
+    post:
+      operationId: v1_questions_approve_create
+      description: Approves a question after validating its full configuration.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuestion'
+          description: ''
+        '422':
+          description: INVALID_QUESTION_CONFIGURATION
+  /api/v1/questions/{id}/choices/:
+    get:
+      operationId: v1_questions_choices_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTeacherChoiceList'
+          description: ''
+    post:
+      operationId: v1_questions_choices_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherChoiceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherChoiceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherChoiceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherChoice'
+          description: ''
+  /api/v1/questions/{id}/reject/:
+    post:
+      operationId: v1_questions_reject_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherQuestionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherQuestionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherQuestionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuestion'
+          description: ''
+  /api/v1/quizzes/:
+    get:
+      operationId: v1_quizzes_list
+      description: |-
+        List quizzes visible to the caller.
+
+        Teachers see their own drafts, published and archived quizzes. Students only see
+        published, currently available quizzes in classrooms where their enrollment is ACTIVE.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTeacherQuizListList'
+          description: ''
+    post:
+      operationId: v1_quizzes_create
+      description: |-
+        List quizzes visible to the caller.
+
+        Teachers see their own drafts, published and archived quizzes. Students only see
+        published, currently available quizzes in classrooms where their enrollment is ACTIVE.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuizList'
+          description: ''
+  /api/v1/quizzes/{id}/:
+    get:
+      operationId: v1_quizzes_retrieve
+      description: |-
+        Role-aware quiz detail.
+
+        Teachers receive full configuration (including answer keys). Students receive only
+        approved questions without correct choices, numeric answers, tolerance or explanations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuizDetail'
+          description: ''
+    patch:
+      operationId: v1_quizzes_partial_update
+      description: |-
+        Role-aware quiz detail.
+
+        Teachers receive full configuration (including answer keys). Students receive only
+        approved questions without correct choices, numeric answers, tolerance or explanations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedQuizUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedQuizUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedQuizUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuizDetail'
+          description: ''
+  /api/v1/quizzes/{id}/archive/:
+    post:
+      operationId: v1_quizzes_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuiz'
+          description: ''
+  /api/v1/quizzes/{id}/attempts/:
+    get:
+      operationId: v1_quizzes_attempts_retrieve
+      description: Teacher view of all student attempts on a quiz they own.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptAnalytics'
+          description: ''
+    post:
+      operationId: v1_quizzes_attempts_create
+      description: Starts an attempt. Rejected with 409 when the quiz is not published/available,
+        the student is not enrolled, the attempt limit is reached (QUIZ_ATTEMPT_LIMIT_REACHED)
+        or an active attempt already exists (QUIZ_ATTEMPT_ALREADY_ACTIVE).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+              examples:
+                StartAttempt:
+                  value:
+                    id: 1
+                    quiz: 1
+                    attempt_number: 1
+                    status: IN_PROGRESS
+                    started_at: '2026-08-04T10:00:00Z'
+                    expires_at: '2026-08-04T10:15:00Z'
+                    submitted_at: null
+                    answers: []
+                  summary: Start attempt
+          description: ''
+  /api/v1/quizzes/{id}/publish/:
+    post:
+      operationId: v1_quizzes_publish_create
+      description: Publishing requires an owned classroom, a PUBLISHED lesson, at
+        least one question and every question APPROVED and structurally valid. Sets
+        published_at.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuiz'
+          description: ''
+  /api/v1/quizzes/{id}/questions/:
+    get:
+      operationId: v1_quizzes_questions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuestion'
+          description: ''
+    post:
+      operationId: v1_quizzes_questions_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionWriteRequest'
+            examples:
+              AddMultiple-choiceQuestion:
+                value:
+                  topic: 1
+                  question_type: MULTIPLE_CHOICE
+                  prompt: 'Solve for x: 2x + 4 = 12'
+                  difficulty: 2
+                  points: 5
+                summary: Add multiple-choice question
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QuestionWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QuestionWriteRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuestion'
+          description: ''
+  /api/v1/quizzes/{id}/results-summary/:
+    get:
+      operationId: v1_quizzes_results_summary_retrieve
+      description: Aggregate performance summary for a quiz the teacher owns.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResultsSummary'
+          description: ''
+  /api/v1/students/me/attempts/:
+    get:
+      operationId: v1_students_me_attempts_list
+      description: All quiz attempts belonging to the authenticated student.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMyAttemptList'
+          description: ''
+  /api/v1/students/me/quizzes/:
+    get:
+      operationId: v1_students_me_quizzes_list
+      description: Available quizzes for the authenticated student.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStudentQuizList'
+          description: ''
+  /api/v1/subjects/:
+    get:
+      operationId: v1_subjects_list
+      description: List active subjects. Read-only for API users; data is managed
+        in Django Admin.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSubjectList'
+          description: ''
+  /api/v1/subjects/{id}/topics/:
+    get:
+      operationId: v1_subjects_topics_list
+      description: List topics belonging to a subject.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCurriculumTopicList'
+          description: ''
+  /api/v1/topics/{id}/:
+    get:
+      operationId: v1_topics_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicDetail'
+          description: ''
+components:
+  schemas:
+    AnswerPreview:
+      type: object
+      properties:
+        question:
+          type: integer
+        selected_choice:
+          type: integer
+          nullable: true
+        numeric_response:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        answered_at:
+          type: string
+          format: date-time
+      required:
+      - answered_at
+      - numeric_response
+      - question
+      - selected_choice
+    AnswerSummary:
+      type: object
+      properties:
+        question:
+          type: integer
+        prompt:
+          type: string
+        question_type:
+          type: string
+        selected_choice:
+          type: integer
+          nullable: true
+        numeric_response:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        is_correct:
+          type: boolean
+        points_awarded:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        correct_choice:
+          type: integer
+          nullable: true
+        numeric_answer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+      required:
+      - correct_choice
+      - is_correct
+      - numeric_answer
+      - numeric_response
+      - points_awarded
+      - prompt
+      - question
+      - question_type
+      - selected_choice
+    Attempt:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quiz:
+          type: integer
+          readOnly: true
+        attempt_number:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AttemptStatusEnum'
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnswerPreview'
+          readOnly: true
+      required:
+      - answers
+      - attempt_number
+      - expires_at
+      - id
+      - quiz
+      - started_at
+      - status
+      - submitted_at
+    AttemptAnalytics:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        student:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        attempt_number:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AttemptStatusEnum'
+          readOnly: true
+        score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        earned_points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        maximum_points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        passed:
+          type: boolean
+          readOnly: true
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnswerSummary'
+          readOnly: true
+      required:
+      - answers
+      - attempt_number
+      - earned_points
+      - expires_at
+      - id
+      - maximum_points
+      - passed
+      - score
+      - started_at
+      - status
+      - student
+      - submitted_at
+    AttemptResult:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quiz:
+          type: integer
+          readOnly: true
+        quiz_title:
+          type: string
+          readOnly: true
+        attempt_number:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AttemptStatusEnum'
+          readOnly: true
+        score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        earned_points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        maximum_points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        passed:
+          type: boolean
+          readOnly: true
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionResultItem'
+          readOnly: true
+      required:
+      - attempt_number
+      - earned_points
+      - expires_at
+      - id
+      - maximum_points
+      - passed
+      - questions
+      - quiz
+      - quiz_title
+      - score
+      - started_at
+      - status
+      - submitted_at
+    AttemptStatusEnum:
+      enum:
+      - IN_PROGRESS
+      - SUBMITTED
+      - EXPIRED
+      type: string
+      description: |-
+        * `IN_PROGRESS` - In Progress
+        * `SUBMITTED` - Submitted
+        * `EXPIRED` - Expired
+    Classroom:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        section:
+          type: string
+          maxLength: 100
+        school_year:
+          type: string
+          maxLength: 50
+        join_code:
+          type: string
+          nullable: true
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - join_code
+      - name
+      - updated_at
+    ClassroomQuizResults:
+      type: object
+      properties:
+        quiz:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QuizStatusEnum'
+          readOnly: true
+        total_attempts:
+          type: integer
+          readOnly: true
+        submitted_attempts:
+          type: integer
+          readOnly: true
+        passed_attempts:
+          type: integer
+          readOnly: true
+        average_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+      required:
+      - average_score
+      - passed_attempts
+      - quiz
+      - status
+      - submitted_attempts
+      - title
+      - total_attempts
+    ClassroomRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        section:
+          type: string
+          maxLength: 100
+        school_year:
+          type: string
+          maxLength: 50
+        is_active:
+          type: boolean
+      required:
+      - name
+    ClassroomUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        section:
+          type: string
+          maxLength: 100
+        school_year:
+          type: string
+          maxLength: 50
+        is_active:
+          type: boolean
+      required:
+      - name
+    CurriculumTopic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        subject:
+          type: integer
+          readOnly: true
+        grade_level:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        sequence_order:
+          type: integer
+          readOnly: true
+      required:
+      - code
+      - description
+      - grade_level
+      - id
+      - sequence_order
+      - subject
+      - title
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        student:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/EnrollmentStatusEnum'
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - joined_at
+      - status
+      - student
+    EnrollmentStatusEnum:
+      enum:
+      - ACTIVE
+      - INACTIVE
+      type: string
+      description: |-
+        * `ACTIVE` - Active
+        * `INACTIVE` - Inactive
+    JoinClassroom:
+      type: object
+      properties:
+        join_code:
+          type: string
+          maxLength: 16
+      required:
+      - join_code
+    JoinClassroomRequest:
+      type: object
+      properties:
+        join_code:
+          type: string
+          minLength: 1
+          maxLength: 16
+      required:
+      - join_code
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        topic:
+          type: integer
+          readOnly: true
+        classroom:
+          type: integer
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        summary:
+          type: string
+        learning_objectives: {}
+        content:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QuizStatusEnum'
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - classroom
+      - created_at
+      - id
+      - published_at
+      - status
+      - topic
+      - updated_at
+      - version
+    LessonRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        summary:
+          type: string
+        learning_objectives: {}
+        content:
+          type: string
+    MyAttempt:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quiz:
+          type: integer
+          readOnly: true
+        quiz_title:
+          type: string
+          readOnly: true
+        attempt_number:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AttemptStatusEnum'
+          readOnly: true
+        score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        passed:
+          type: boolean
+          readOnly: true
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        time_limit_minutes:
+          type: integer
+          readOnly: true
+      required:
+      - attempt_number
+      - expires_at
+      - id
+      - passed
+      - quiz
+      - quiz_title
+      - score
+      - started_at
+      - status
+      - submitted_at
+      - time_limit_minutes
+    PaginatedClassroomList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Classroom'
+    PaginatedClassroomQuizResultsList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassroomQuizResults'
+    PaginatedCurriculumTopicList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurriculumTopic'
+    PaginatedEnrollmentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Enrollment'
+    PaginatedLessonList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Lesson'
+    PaginatedMyAttemptList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyAttempt'
+    PaginatedStudentQuizList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentQuiz'
+    PaginatedSubjectList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+    PaginatedTeacherChoiceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherChoice'
+    PaginatedTeacherQuizListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherQuizList'
+    PatchedChoiceWriteRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+        is_correct:
+          type: boolean
+          default: false
+        sequence_order:
+          type: integer
+          default: 0
+    PatchedClassroomUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        section:
+          type: string
+          maxLength: 100
+        school_year:
+          type: string
+          maxLength: 50
+        is_active:
+          type: boolean
+    PatchedLessonRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        summary:
+          type: string
+        learning_objectives: {}
+        content:
+          type: string
+    PatchedQuestionWriteRequest:
+      type: object
+      properties:
+        topic:
+          type: integer
+        question_type:
+          $ref: '#/components/schemas/QuestionTypeEnum'
+        prompt:
+          type: string
+          minLength: 1
+        explanation:
+          type: string
+        difficulty:
+          type: integer
+          maximum: 5
+          minimum: 1
+          default: 1
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        numeric_answer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        numeric_tolerance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        sequence_order:
+          type: integer
+          default: 0
+    PatchedQuizUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        instructions:
+          type: string
+        attempt_limit:
+          type: integer
+          minimum: 1
+          nullable: true
+        time_limit_minutes:
+          type: integer
+          minimum: 1
+          nullable: true
+        available_from:
+          type: string
+          format: date-time
+          nullable: true
+        available_until:
+          type: string
+          format: date-time
+          nullable: true
+        passing_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        randomize_questions:
+          type: boolean
+        show_results_immediately:
+          type: boolean
+    QuestionResultItem:
+      type: object
+      properties:
+        question:
+          type: integer
+        prompt:
+          type: string
+        question_type:
+          type: string
+        selected_choice:
+          type: integer
+          nullable: true
+        numeric_response:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        is_correct:
+          type: boolean
+        points_awarded:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        correct_choice:
+          type: integer
+          nullable: true
+        numeric_answer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        explanation:
+          type: string
+      required:
+      - correct_choice
+      - explanation
+      - is_correct
+      - numeric_answer
+      - numeric_response
+      - points_awarded
+      - prompt
+      - question
+      - question_type
+      - selected_choice
+    QuestionTypeEnum:
+      enum:
+      - MULTIPLE_CHOICE
+      - NUMERIC
+      type: string
+      description: |-
+        * `MULTIPLE_CHOICE` - Multiple Choice
+        * `NUMERIC` - Numeric
+    QuestionWriteRequest:
+      type: object
+      properties:
+        topic:
+          type: integer
+        question_type:
+          $ref: '#/components/schemas/QuestionTypeEnum'
+        prompt:
+          type: string
+          minLength: 1
+        explanation:
+          type: string
+        difficulty:
+          type: integer
+          maximum: 5
+          minimum: 1
+          default: 1
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        numeric_answer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        numeric_tolerance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        sequence_order:
+          type: integer
+          default: 0
+      required:
+      - points
+      - prompt
+      - question_type
+      - topic
+    QuizResultsSummary:
+      type: object
+      properties:
+        quiz:
+          type: integer
+        quiz_title:
+          type: string
+        total_attempts:
+          type: integer
+          readOnly: true
+        submitted_attempts:
+          type: integer
+          readOnly: true
+        average_score:
+          type: number
+          format: double
+          nullable: true
+          readOnly: true
+        pass_rate:
+          type: number
+          format: double
+          nullable: true
+          readOnly: true
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentSummaryItem'
+          readOnly: true
+      required:
+      - average_score
+      - pass_rate
+      - quiz
+      - quiz_title
+      - students
+      - submitted_attempts
+      - total_attempts
+    QuizStatusEnum:
+      enum:
+      - DRAFT
+      - PUBLISHED
+      - ARCHIVED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `PUBLISHED` - Published
+        * `ARCHIVED` - Archived
+    Register:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RegisterRoleEnum'
+          default: STUDENT
+      required:
+      - email
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RegisterRoleEnum'
+          default: STUDENT
+      required:
+      - email
+      - password
+    RegisterRoleEnum:
+      enum:
+      - STUDENT
+      - TEACHER
+      type: string
+      description: |-
+        * `STUDENT` - STUDENT
+        * `TEACHER` - TEACHER
+    ReviewStatusEnum:
+      enum:
+      - DRAFT
+      - APPROVED
+      - REJECTED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `APPROVED` - Approved
+        * `REJECTED` - Rejected
+    SaveAnswerRequest:
+      type: object
+      properties:
+        selected_choice:
+          type: integer
+          nullable: true
+        numeric_response:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+    SavedAnswer:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        question:
+          type: integer
+          readOnly: true
+        selected_choice:
+          type: integer
+          readOnly: true
+          nullable: true
+        numeric_response:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          readOnly: true
+          nullable: true
+        answered_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - answered_at
+      - id
+      - numeric_response
+      - question
+      - selected_choice
+    StudentQuiz:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        lesson:
+          type: integer
+          readOnly: true
+        classroom:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        instructions:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QuizStatusEnum'
+          readOnly: true
+        attempt_limit:
+          type: integer
+          readOnly: true
+          nullable: true
+        time_limit_minutes:
+          type: integer
+          readOnly: true
+          nullable: true
+        available_from:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        available_until:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        passing_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        randomize_questions:
+          type: boolean
+          readOnly: true
+        show_results_immediately:
+          type: boolean
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        question_count:
+          type: integer
+          readOnly: true
+      required:
+      - attempt_limit
+      - available_from
+      - available_until
+      - classroom
+      - id
+      - instructions
+      - lesson
+      - passing_score
+      - published_at
+      - question_count
+      - randomize_questions
+      - show_results_immediately
+      - status
+      - time_limit_minutes
+      - title
+    StudentSummaryItem:
+      type: object
+      properties:
+        student:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        attempts:
+          type: integer
+        best_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        passed_attempts:
+          type: integer
+        last_submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - attempts
+      - best_score
+      - last_submitted_at
+      - passed_attempts
+      - student
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+      required:
+      - code
+      - id
+      - is_active
+      - name
+    TeacherChoice:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text:
+          type: string
+          maxLength: 500
+        is_correct:
+          type: boolean
+        sequence_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - id
+      - is_correct
+      - text
+    TeacherChoiceRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+        is_correct:
+          type: boolean
+        sequence_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - is_correct
+      - text
+    TeacherQuestion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quiz:
+          type: integer
+          readOnly: true
+        topic:
+          type: integer
+          readOnly: true
+        question_type:
+          $ref: '#/components/schemas/QuestionTypeEnum'
+        prompt:
+          type: string
+        explanation:
+          type: string
+        difficulty:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        numeric_answer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        numeric_tolerance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        is_ai_generated:
+          type: boolean
+          readOnly: true
+        review_status:
+          allOf:
+          - $ref: '#/components/schemas/ReviewStatusEnum'
+          readOnly: true
+        sequence_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherChoice'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - choices
+      - created_at
+      - id
+      - is_ai_generated
+      - points
+      - prompt
+      - question_type
+      - quiz
+      - review_status
+      - topic
+      - updated_at
+    TeacherQuestionRequest:
+      type: object
+      properties:
+        question_type:
+          $ref: '#/components/schemas/QuestionTypeEnum'
+        prompt:
+          type: string
+          minLength: 1
+        explanation:
+          type: string
+        difficulty:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        numeric_answer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        numeric_tolerance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,10})?$
+          nullable: true
+        sequence_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - points
+      - prompt
+      - question_type
+    TeacherQuiz:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        lesson:
+          type: integer
+          readOnly: true
+        classroom:
+          type: integer
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        instructions:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QuizStatusEnum'
+          readOnly: true
+        attempt_limit:
+          type: integer
+          readOnly: true
+          nullable: true
+        time_limit_minutes:
+          type: integer
+          readOnly: true
+          nullable: true
+        available_from:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        available_until:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        passing_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        randomize_questions:
+          type: boolean
+          readOnly: true
+        show_results_immediately:
+          type: boolean
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - attempt_limit
+      - author
+      - available_from
+      - available_until
+      - classroom
+      - created_at
+      - id
+      - instructions
+      - lesson
+      - passing_score
+      - published_at
+      - randomize_questions
+      - show_results_immediately
+      - status
+      - time_limit_minutes
+      - title
+      - updated_at
+    TeacherQuizDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        lesson:
+          type: integer
+          readOnly: true
+        classroom:
+          type: integer
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        instructions:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QuizStatusEnum'
+          readOnly: true
+        attempt_limit:
+          type: integer
+          readOnly: true
+          nullable: true
+        time_limit_minutes:
+          type: integer
+          readOnly: true
+          nullable: true
+        available_from:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        available_until:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        passing_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        randomize_questions:
+          type: boolean
+          readOnly: true
+        show_results_immediately:
+          type: boolean
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherQuestion'
+          readOnly: true
+      required:
+      - attempt_limit
+      - author
+      - available_from
+      - available_until
+      - classroom
+      - created_at
+      - id
+      - instructions
+      - lesson
+      - passing_score
+      - published_at
+      - questions
+      - randomize_questions
+      - show_results_immediately
+      - status
+      - time_limit_minutes
+      - title
+      - updated_at
+    TeacherQuizList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        lesson:
+          type: integer
+          readOnly: true
+        classroom:
+          type: integer
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        instructions:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QuizStatusEnum'
+          readOnly: true
+        attempt_limit:
+          type: integer
+          readOnly: true
+          nullable: true
+        time_limit_minutes:
+          type: integer
+          readOnly: true
+          nullable: true
+        available_from:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        available_until:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        passing_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        randomize_questions:
+          type: boolean
+          readOnly: true
+        show_results_immediately:
+          type: boolean
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        question_count:
+          type: integer
+          readOnly: true
+      required:
+      - attempt_limit
+      - author
+      - available_from
+      - available_until
+      - classroom
+      - created_at
+      - id
+      - instructions
+      - lesson
+      - passing_score
+      - published_at
+      - question_count
+      - randomize_questions
+      - show_results_immediately
+      - status
+      - time_limit_minutes
+      - title
+      - updated_at
+    TokenBlacklistRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    TopicDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        subject:
+          allOf:
+          - $ref: '#/components/schemas/Subject'
+          readOnly: true
+        grade_level:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        sequence_order:
+          type: integer
+          readOnly: true
+      required:
+      - code
+      - description
+      - grade_level
+      - id
+      - sequence_order
+      - subject
+      - title
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/UserRoleEnum'
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - first_name
+      - id
+      - is_active
+      - last_name
+      - role
+      - updated_at
+    UserRoleEnum:
+      enum:
+      - STUDENT
+      - TEACHER
+      - ADMIN
+      type: string
+      description: |-
+        * `STUDENT` - Student
+        * `TEACHER` - Teacher
+        * `ADMIN` - Admin
+    UserSummary:
+      type: object
+      description: Non-sensitive user info for cross-domain responses (student lists,
+        authors).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+      required:
+      - first_name
+      - id
+      - last_name
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.classrooms",
     "apps.curriculum",
     "apps.lessons",
+    "apps.quizzes",
 ]
 
 MIDDLEWARE = [
@@ -103,6 +104,7 @@ REST_FRAMEWORK = {
     },
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "EXCEPTION_HANDLER": "config.exceptions.exception_handler",
 }
 
 SIMPLE_JWT = {
@@ -123,6 +125,11 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
+    "ENUM_NAME_OVERRIDES": {
+        "QuizStatusEnum": "apps.quizzes.models.QuizStatus",
+        "AttemptStatusEnum": "apps.quizzes.models.AttemptStatus",
+        "EnrollmentStatusEnum": "apps.classrooms.models.EnrollmentStatus",
+    },
 }
 
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
