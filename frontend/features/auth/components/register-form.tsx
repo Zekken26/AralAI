@@ -14,6 +14,7 @@ import { ErrorAlert } from "@/components/feedback/error-alert";
 import { ROUTES } from "@/lib/routes";
 import { dashboardRouteForRole, useAuth } from "@/features/auth/hooks/use-auth";
 import { registerRequestSchema } from "@/features/auth/schemas";
+import type { ApiError } from "@/lib/errors";
 import type { PublicRegistrationRole } from "@/types/auth";
 
 const ROLE_OPTIONS: { value: PublicRegistrationRole; label: string; description: string }[] = [

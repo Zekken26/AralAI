@@ -12,6 +12,8 @@ export const ROUTES = {
     quizzes: "/student/quizzes",
     progress: "/student/progress",
     recommendations: "/student/recommendations",
+    classroomDetail: (classroomId: number | string) => `/student/classrooms/${classroomId}`,
+    lessonDetail: (lessonId: number | string) => `/student/lessons/${lessonId}`,
   },
   teacher: {
     dashboard: "/teacher/dashboard",
