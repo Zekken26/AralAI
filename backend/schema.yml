@@ -338,6 +338,102 @@ paths:
               schema:
                 $ref: '#/components/schemas/Classroom'
           description: ''
+  /api/v1/classrooms/{classroom_id}/progress/:
+    get:
+      operationId: v1_classrooms_progress_retrieve
+      description: Class-wide topic mastery overview for a classroom the teacher owns.
+      parameters:
+      - in: path
+        name: classroom_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassroomProgress'
+          description: ''
+  /api/v1/classrooms/{classroom_id}/students-needing-support/:
+    get:
+      operationId: v1_classrooms_students_needing_support_retrieve
+      description: Students with at least one topic in NEEDS_SUPPORT status in an
+        owned classroom.
+      parameters:
+      - in: path
+        name: classroom_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentsNeedingSupport'
+          description: ''
+  /api/v1/classrooms/{classroom_id}/students/{student_id}/progress/:
+    get:
+      operationId: v1_classrooms_students_progress_retrieve
+      description: One enrolled student's mastery over the topics taught in an owned
+        classroom.
+      parameters:
+      - in: path
+        name: classroom_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: student_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherStudentProgress'
+          description: ''
+  /api/v1/classrooms/{classroom_id}/topics/{topic_id}/progress/:
+    get:
+      operationId: v1_classrooms_topics_progress_retrieve
+      description: Per-student mastery breakdown for one topic in an owned classroom.
+      parameters:
+      - in: path
+        name: classroom_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: topic_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassroomTopicProgress'
+          description: ''
   /api/v1/classrooms/{id}/:
     get:
       operationId: v1_classrooms_retrieve
@@ -1141,6 +1237,94 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedMyAttemptList'
           description: ''
+  /api/v1/students/me/progress/:
+    get:
+      operationId: v1_students_me_progress_retrieve
+      description: Rolled-up progress summary for the authenticated student.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressSummary'
+          description: ''
+  /api/v1/students/me/progress/topics/:
+    get:
+      operationId: v1_students_me_progress_topics_list
+      description: Mastery records for the authenticated student, optionally filtered
+        by subject.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTopicMasteryListList'
+          description: ''
+  /api/v1/students/me/progress/topics/{topic_id}/:
+    get:
+      operationId: v1_students_me_progress_topics_retrieve
+      description: Mastery record for one topic, with its active recommendations and
+        last change.
+      parameters:
+      - in: path
+        name: topic_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicMasteryDetail'
+          description: ''
+  /api/v1/students/me/progress/topics/{topic_id}/history/:
+    get:
+      operationId: v1_students_me_progress_topics_history_list
+      description: Chronological mastery-score changes for a topic the student has
+        attempted.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: path
+        name: topic_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMasteryHistoryList'
+          description: ''
   /api/v1/students/me/quizzes/:
     get:
       operationId: v1_students_me_quizzes_list
@@ -1162,6 +1346,94 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedStudentQuizList'
+          description: ''
+  /api/v1/students/me/recommendations/:
+    get:
+      operationId: v1_students_me_recommendations_list
+      description: Active recommendations for the authenticated student.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRecommendationList'
+          description: ''
+  /api/v1/students/me/recommendations/{id}/complete/:
+    post:
+      operationId: v1_students_me_recommendations_complete_create
+      description: Completes an ACTIVE recommendation. Already-completed or dismissed
+        recommendations are returned unchanged.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/v1/students/me/recommendations/{id}/dismiss/:
+    post:
+      operationId: v1_students_me_recommendations_dismiss_create
+      description: Dismisses an ACTIVE recommendation. Already-completed or dismissed
+        recommendations are returned unchanged.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/v1/students/me/recommendations/history/:
+    get:
+      operationId: v1_students_me_recommendations_history_list
+      description: Completed and dismissed recommendations for the authenticated student.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRecommendationList'
           description: ''
   /api/v1/subjects/:
     get:
@@ -1531,6 +1803,37 @@ components:
       - join_code
       - name
       - updated_at
+    ClassroomProgress:
+      type: object
+      properties:
+        classroom_id:
+          type: integer
+        class_average_mastery:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        attempted_topics:
+          type: integer
+        weakest_topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicAverage'
+        strongest_topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicAverage'
+        topic_distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicDistributionItem'
+      required:
+      - attempted_topics
+      - class_average_mastery
+      - classroom_id
+      - strongest_topics
+      - topic_distribution
+      - weakest_topics
     ClassroomQuizResults:
       type: object
       properties:
@@ -1584,6 +1887,63 @@ components:
           type: boolean
       required:
       - name
+    ClassroomTopicDistribution:
+      type: object
+      properties:
+        needs_support:
+          type: integer
+        developing:
+          type: integer
+        proficient:
+          type: integer
+        mastered:
+          type: integer
+      required:
+      - developing
+      - mastered
+      - needs_support
+      - proficient
+    ClassroomTopicProgress:
+      type: object
+      properties:
+        topic:
+          allOf:
+          - $ref: '#/components/schemas/TopicSummary'
+          nullable: true
+        average_mastery:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        attempted_students:
+          type: integer
+        distribution:
+          $ref: '#/components/schemas/ClassroomTopicDistribution'
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassroomTopicStudentItem'
+      required:
+      - attempted_students
+      - average_mastery
+      - distribution
+      - students
+      - topic
+    ClassroomTopicStudentItem:
+      type: object
+      properties:
+        student:
+          $ref: '#/components/schemas/UserSummary'
+        mastery_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        status:
+          type: string
+      required:
+      - mastery_score
+      - status
+      - student
     ClassroomUpdate:
       type: object
       properties:
@@ -1745,6 +2105,61 @@ components:
         learning_objectives: {}
         content:
           type: string
+    MasteryHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quiz_attempt:
+          type: integer
+          readOnly: true
+        quiz_title:
+          type: string
+          readOnly: true
+        previous_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        new_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        score_change:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+          readOnly: true
+        reason:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - new_score
+      - previous_score
+      - quiz_attempt
+      - quiz_title
+      - reason
+      - score_change
+    MasteryStatusEnum:
+      enum:
+      - NEEDS_SUPPORT
+      - DEVELOPING
+      - PROFICIENT
+      - MASTERED
+      type: string
+      description: |-
+        * `NEEDS_SUPPORT` - Needs Support
+        * `DEVELOPING` - Developing
+        * `PROFICIENT` - Proficient
+        * `MASTERED` - Mastered
     MyAttempt:
       type: object
       properties:
@@ -1918,6 +2333,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Lesson'
+    PaginatedMasteryHistoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MasteryHistory'
     PaginatedMyAttemptList:
       type: object
       required:
@@ -1941,6 +2379,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MyAttempt'
+    PaginatedRecommendationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
     PaginatedStudentQuizList:
       type: object
       required:
@@ -2033,6 +2494,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TeacherQuizList'
+    PaginatedTopicMasteryListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicMasteryList'
     PatchedChoiceWriteRequest:
       type: object
       properties:
@@ -2138,6 +2622,44 @@ components:
           type: boolean
         show_results_immediately:
           type: boolean
+    ProgressSummary:
+      type: object
+      properties:
+        overall_mastery_average:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        topics_attempted:
+          type: integer
+        topics_mastered:
+          type: integer
+        topics_needing_support:
+          type: integer
+        total_submitted_attempts:
+          type: integer
+        recent_performance_trend:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendItem'
+        trend_delta:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+          nullable: true
+        last_activity_date:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - last_activity_date
+      - overall_mastery_average
+      - recent_performance_trend
+      - topics_attempted
+      - topics_mastered
+      - topics_needing_support
+      - total_submitted_attempts
+      - trend_delta
     QuestionResultItem:
       type: object
       properties:
@@ -2275,6 +2797,113 @@ components:
         * `DRAFT` - Draft
         * `PUBLISHED` - Published
         * `ARCHIVED` - Archived
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        topic:
+          allOf:
+          - $ref: '#/components/schemas/TopicSummary'
+          readOnly: true
+        recommendation_type:
+          allOf:
+          - $ref: '#/components/schemas/RecommendationTypeEnum'
+          readOnly: true
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/RecommendationPriorityEnum'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        reason:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/RecommendationStatusEnum'
+          readOnly: true
+        target_lesson:
+          allOf:
+          - $ref: '#/components/schemas/TargetLesson'
+          nullable: true
+          readOnly: true
+        target_quiz:
+          allOf:
+          - $ref: '#/components/schemas/TargetQuiz'
+          nullable: true
+          readOnly: true
+        generated_from_attempt:
+          type: integer
+          readOnly: true
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completed_at
+      - created_at
+      - generated_from_attempt
+      - id
+      - priority
+      - reason
+      - recommendation_type
+      - status
+      - target_lesson
+      - target_quiz
+      - title
+      - topic
+      - updated_at
+    RecommendationPriorityEnum:
+      enum:
+      - HIGH
+      - MEDIUM
+      - LOW
+      type: string
+      description: |-
+        * `HIGH` - High
+        * `MEDIUM` - Medium
+        * `LOW` - Low
+    RecommendationStatusEnum:
+      enum:
+      - ACTIVE
+      - COMPLETED
+      - DISMISSED
+      - EXPIRED
+      type: string
+      description: |-
+        * `ACTIVE` - Active
+        * `COMPLETED` - Completed
+        * `DISMISSED` - Dismissed
+        * `EXPIRED` - Expired
+    RecommendationTypeEnum:
+      enum:
+      - REVIEW_LESSON
+      - EASY_PRACTICE
+      - GUIDED_PRACTICE
+      - MIXED_PRACTICE
+      - ADVANCE_TOPIC
+      - SPACED_REVIEW
+      type: string
+      description: |-
+        * `REVIEW_LESSON` - Review Lesson
+        * `EASY_PRACTICE` - Easy Practice
+        * `GUIDED_PRACTICE` - Guided Practice
+        * `MIXED_PRACTICE` - Mixed Practice
+        * `ADVANCE_TOPIC` - Advance Topic
+        * `SPACED_REVIEW` - Spaced Review
     Register:
       type: object
       properties:
@@ -2476,6 +3105,30 @@ components:
       - last_submitted_at
       - passed_attempts
       - student
+    StudentSupportItem:
+      type: object
+      properties:
+        student:
+          $ref: '#/components/schemas/UserSummary'
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportTopic'
+      required:
+      - student
+      - topics
+    StudentsNeedingSupport:
+      type: object
+      properties:
+        count:
+          type: integer
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentSupportItem'
+      required:
+      - count
+      - students
     Subject:
       type: object
       properties:
@@ -2496,6 +3149,41 @@ components:
       - id
       - is_active
       - name
+    SupportTopic:
+      type: object
+      properties:
+        topic:
+          $ref: '#/components/schemas/TopicSummary'
+        mastery_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        status:
+          type: string
+      required:
+      - mastery_score
+      - status
+      - topic
+    TargetLesson:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+      required:
+      - id
+      - title
+    TargetQuiz:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+      required:
+      - id
+      - title
     TeacherChoice:
       type: object
       properties:
@@ -2907,6 +3595,48 @@ components:
       - time_limit_minutes
       - title
       - updated_at
+    TeacherStudentProgress:
+      type: object
+      properties:
+        student:
+          $ref: '#/components/schemas/UserSummary'
+        topics_attempted:
+          type: integer
+        topics_mastered:
+          type: integer
+        topics_needing_support:
+          type: integer
+        overall_mastery_average:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherStudentTopicItem'
+      required:
+      - overall_mastery_average
+      - student
+      - topics
+      - topics_attempted
+      - topics_mastered
+      - topics_needing_support
+    TeacherStudentTopicItem:
+      type: object
+      properties:
+        topic:
+          $ref: '#/components/schemas/TopicSummary'
+        mastery_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        status:
+          type: string
+      required:
+      - mastery_score
+      - status
+      - topic
     TokenBlacklistRequest:
       type: object
       properties:
@@ -2961,6 +3691,18 @@ components:
           minLength: 1
       required:
       - refresh
+    TopicAverage:
+      type: object
+      properties:
+        topic:
+          $ref: '#/components/schemas/TopicSummary'
+        average_mastery:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+      required:
+      - average_mastery
+      - topic
     TopicDetail:
       type: object
       properties:
@@ -2994,6 +3736,257 @@ components:
       - sequence_order
       - subject
       - title
+    TopicDistributionItem:
+      type: object
+      properties:
+        topic:
+          $ref: '#/components/schemas/TopicSummary'
+        needs_support:
+          type: integer
+        developing:
+          type: integer
+        proficient:
+          type: integer
+        mastered:
+          type: integer
+        attempted_students:
+          type: integer
+        submitted_attempts:
+          type: integer
+      required:
+      - attempted_students
+      - developing
+      - mastered
+      - needs_support
+      - proficient
+      - submitted_attempts
+      - topic
+    TopicMasteryDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        topic:
+          allOf:
+          - $ref: '#/components/schemas/TopicSummary'
+          readOnly: true
+        mastery_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/MasteryStatusEnum'
+          readOnly: true
+        recent_accuracy:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        difficulty_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        consistency_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        independent_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        total_questions_answered:
+          type: integer
+          readOnly: true
+        total_correct_answers:
+          type: integer
+          readOnly: true
+        total_points_earned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        total_points_possible:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        first_attempted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_attempted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_recalculated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        active_recommendation_count:
+          type: integer
+          readOnly: true
+        last_score_change:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        active_recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+          readOnly: true
+      required:
+      - active_recommendation_count
+      - active_recommendations
+      - consistency_score
+      - difficulty_score
+      - first_attempted_at
+      - id
+      - independent_score
+      - last_attempted_at
+      - last_recalculated_at
+      - last_score_change
+      - mastery_score
+      - recent_accuracy
+      - status
+      - topic
+      - total_correct_answers
+      - total_points_earned
+      - total_points_possible
+      - total_questions_answered
+    TopicMasteryList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        topic:
+          allOf:
+          - $ref: '#/components/schemas/TopicSummary'
+          readOnly: true
+        mastery_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/MasteryStatusEnum'
+          readOnly: true
+        recent_accuracy:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        difficulty_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        consistency_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        independent_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        total_questions_answered:
+          type: integer
+          readOnly: true
+        total_correct_answers:
+          type: integer
+          readOnly: true
+        total_points_earned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        total_points_possible:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        first_attempted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_attempted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_recalculated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        active_recommendation_count:
+          type: integer
+          readOnly: true
+      required:
+      - active_recommendation_count
+      - consistency_score
+      - difficulty_score
+      - first_attempted_at
+      - id
+      - independent_score
+      - last_attempted_at
+      - last_recalculated_at
+      - mastery_score
+      - recent_accuracy
+      - status
+      - topic
+      - total_correct_answers
+      - total_points_earned
+      - total_points_possible
+      - total_questions_answered
+    TopicSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        code:
+          type: string
+      required:
+      - code
+      - id
+      - title
+    TrendItem:
+      type: object
+      properties:
+        attempt:
+          type: integer
+        score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        passed:
+          type: boolean
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+      required:
+      - attempt
+      - passed
+      - score
+      - submitted_at
     User:
       type: object
       properties:

@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import Avg, Count, Max, Subquery, OuterRef
+from django.db.models import Count, Max, Subquery, OuterRef
 from django.db.models.functions import Coalesce
 
 from apps.accounts.models import User

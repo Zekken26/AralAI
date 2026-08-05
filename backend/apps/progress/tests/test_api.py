@@ -1,8 +1,6 @@
-from datetime import timedelta
 from decimal import Decimal
 
 import pytest
-from django.utils import timezone
 
 from apps.curriculum.models import CurriculumTopic, Subject
 from apps.progress.models import (
@@ -433,6 +431,10 @@ def test_mastery_detail_query_count(
     recompute_mastery(student_user)
     generate_recommendations_for_topic(student_user, mc.topic_id)
     client = auth_client(student_user)
+    # 4 queries: mastery row (topic/subject joined, active-count annotated),
+    # last MasteryHistory entry, student row for the user summary inside each
+    # recommendation, and the active recommendations with targets joined.
+    # Fixed bound; raising it only masks an N+1.
     with django_assert_num_queries(4):
         response = client.get(f"{TOPICS_URL}{mc.topic_id}/")
     assert response.status_code == 200
@@ -456,6 +458,10 @@ def test_classroom_progress_query_count(
     recompute_mastery(enrollment.student)
     recompute_mastery(second_enrollment.student)
     client = auth_client(teacher_user)
+    # 4 queries: classroom ownership/permission, topic mastery rows (bulk
+    # fetch, students+topics joined), submitted-attempt completion counts, and
+    # topic rows for distribution. Fixed bound so per-student/per-topic N+1s
+    # fail loudly instead of being hidden.
     with django_assert_num_queries(4):
         response = client.get(f"/api/v1/classrooms/{classroom.id}/progress/")
     assert response.status_code == 200
