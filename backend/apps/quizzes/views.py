@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import logging
+
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiResponse,
@@ -13,6 +15,7 @@ from rest_framework.response import Response
 
 from apps.accounts.models import UserRole
 from apps.accounts.permissions import IsStudent, IsTeacher
+from apps.progress.services import process_submitted_attempt
 from apps.quizzes import selectors, services
 from apps.quizzes.models import Choice, Question, Quiz
 from apps.quizzes.serializers import (
@@ -38,6 +41,8 @@ from apps.quizzes.serializers import (
 )
 
 QUIZ_NOT_FOUND_DETAIL = "QUIZ_NOT_AVAILABLE, QUIZ_NOT_PUBLISHED, QUIZ_ATTEMPT_LIMIT_REACHED, QUIZ_ATTEMPT_ALREADY_ACTIVE, QUIZ_ATTEMPT_EXPIRED, QUIZ_ATTEMPT_ALREADY_SUBMITTED, QUESTION_NOT_APPROVED, INVALID_QUESTION_CONFIGURATION, INVALID_ANSWER_FORMAT, CHOICE_NOT_IN_QUESTION, NOT_ENROLLED, LESSON_NOT_PUBLISHED"
+
+logger = logging.getLogger(__name__)
 
 
 class QuizListCreateView(generics.ListCreateAPIView):
@@ -530,6 +535,13 @@ class AttemptSubmitView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         attempt = self.get_attempt()
         attempt = services.submit_quiz_attempt(attempt=attempt, student=request.user)
+        try:
+            process_submitted_attempt(attempt.id)
+        except Exception:
+            logger.exception(
+                "Mastery recalculation failed for attempt %s; quiz submission unaffected.",
+                attempt.id,
+            )
         return Response(AttemptResultSerializer(attempt).data)
 
 

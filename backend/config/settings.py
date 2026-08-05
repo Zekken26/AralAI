@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "apps.curriculum",
     "apps.lessons",
     "apps.quizzes",
+    "apps.progress",
 ]
 
 MIDDLEWARE = [
@@ -129,6 +130,10 @@ SPECTACULAR_SETTINGS = {
         "QuizStatusEnum": "apps.quizzes.models.QuizStatus",
         "AttemptStatusEnum": "apps.quizzes.models.AttemptStatus",
         "EnrollmentStatusEnum": "apps.classrooms.models.EnrollmentStatus",
+        "MasteryStatusEnum": "apps.progress.models.MasteryStatus",
+        "RecommendationTypeEnum": "apps.progress.models.RecommendationType",
+        "RecommendationStatusEnum": "apps.progress.models.RecommendationStatus",
+        "RecommendationPriorityEnum": "apps.progress.models.RecommendationPriority",
     },
 }
 

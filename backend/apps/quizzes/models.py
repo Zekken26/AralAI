@@ -250,6 +250,13 @@ class StudentAnswer(models.Model):
         on_delete=models.PROTECT,
         related_name="student_answers",
     )
+    topic = models.ForeignKey(
+        "curriculum.CurriculumTopic",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="student_answers",
+    )
     selected_choice = models.ForeignKey(
         Choice,
         on_delete=models.SET_NULL,
@@ -292,6 +299,7 @@ class StudentAnswer(models.Model):
         indexes = [
             models.Index(fields=["attempt", "question"]),
             models.Index(fields=["question"]),
+            models.Index(fields=["topic"]),
         ]
 
     def __str__(self) -> str:

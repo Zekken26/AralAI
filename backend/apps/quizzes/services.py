@@ -657,7 +657,10 @@ def submit_quiz_attempt(*, attempt: QuizAttempt, student: User) -> QuizAttempt:
                 answer.is_correct = item["is_correct"]
                 answer.points_awarded = item["points_awarded"]
                 answer.answered_at = now
-                answer.save(update_fields=["is_correct", "points_awarded", "answered_at", "updated_at"])
+                answer.topic_id = item["question"].topic_id
+                answer.save(
+                    update_fields=["is_correct", "points_awarded", "answered_at", "topic", "updated_at"]
+                )
 
         quiz = attempt.quiz
         score = _percentage(earned, maximum)
