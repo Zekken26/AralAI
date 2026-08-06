@@ -8,7 +8,7 @@ const STUDENT_NAV = [
   { href: ROUTES.student.dashboard, label: "Dashboard" },
   { href: ROUTES.student.classrooms, label: "Classrooms" },
   { href: ROUTES.student.lessons, label: "Lessons", placeholder: true },
-  { href: ROUTES.student.quizzes, label: "Quizzes", placeholder: true },
+  { href: ROUTES.student.quizzes, label: "Quizzes" },
   { href: ROUTES.student.progress, label: "Progress", placeholder: true },
   { href: ROUTES.student.recommendations, label: "Recommendations", placeholder: true },
 ];
