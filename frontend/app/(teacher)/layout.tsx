@@ -9,7 +9,7 @@ const TEACHER_NAV = [
   { href: ROUTES.teacher.classrooms, label: "Classrooms" },
   { href: ROUTES.teacher.lessons, label: "Lessons" },
   { href: ROUTES.teacher.quizzes, label: "Quizzes" },
-  { href: ROUTES.teacher.analytics, label: "Analytics", placeholder: true },
+  { href: ROUTES.teacher.analytics, label: "Analytics" },
 ];
 
 export default function TeacherLayout({ children }: { children: ReactNode }) {

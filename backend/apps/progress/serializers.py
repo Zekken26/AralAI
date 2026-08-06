@@ -159,6 +159,7 @@ class TopicDistributionItemSerializer(serializers.Serializer):
     mastered = serializers.IntegerField()
     attempted_students = serializers.IntegerField()
     submitted_attempts = serializers.IntegerField()
+    average_mastery = serializers.DecimalField(max_digits=5, decimal_places=2)
 
 
 class ClassroomProgressSerializer(serializers.Serializer):

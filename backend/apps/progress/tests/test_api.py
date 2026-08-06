@@ -320,6 +320,7 @@ def test_classroom_progress_aggregates(
     assert distribution["mastered"] == 0
     assert distribution["attempted_students"] == 2
     assert distribution["submitted_attempts"] == 2
+    assert float(distribution["average_mastery"]) == 31.0
 
 
 @pytest.mark.django_db

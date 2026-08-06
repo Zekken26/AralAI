@@ -176,5 +176,7 @@ export const classroomQuizResultSchema = z.object({
   average_score: z.string().nullable(),
 });
 
+export type ClassroomQuizResult = z.infer<typeof classroomQuizResultSchema>;
+
 export const classroomQuizResultListSchema = paginatedSchema(classroomQuizResultSchema);
 export type ClassroomQuizResultList = z.infer<typeof classroomQuizResultListSchema>;

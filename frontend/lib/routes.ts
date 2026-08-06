@@ -37,6 +37,12 @@ export const ROUTES = {
     quizQuestions: (quizId: number | string) => `/teacher/quizzes/${quizId}/questions`,
     quizResults: (quizId: number | string) => `/teacher/quizzes/${quizId}/results`,
     analytics: "/teacher/analytics",
+    classroomAnalytics: (classroomId: number | string) =>
+      `/teacher/classrooms/${classroomId}/analytics`,
+    topicAnalytics: (classroomId: number | string, topicId: number | string) =>
+      `/teacher/classrooms/${classroomId}/analytics/topics/${topicId}`,
+    studentAnalytics: (classroomId: number | string, studentId: number | string) =>
+      `/teacher/classrooms/${classroomId}/analytics/students/${studentId}`,
   },
 } as const;
 

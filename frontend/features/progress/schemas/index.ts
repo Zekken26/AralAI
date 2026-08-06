@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { paginatedSchema } from "@/types/pagination";
 
-const masteryStatusSchema = z.enum(["NEEDS_SUPPORT", "DEVELOPING", "PROFICIENT", "MASTERED"]);
+export const masteryStatusSchema = z.enum(["NEEDS_SUPPORT", "DEVELOPING", "PROFICIENT", "MASTERED"]);
+export type MasteryStatus = z.infer<typeof masteryStatusSchema>;
 const recommendationTypeSchema = z.enum([
   "REVIEW_LESSON",
   "EASY_PRACTICE",
@@ -13,7 +14,7 @@ const recommendationTypeSchema = z.enum([
 const recommendationPrioritySchema = z.enum(["HIGH", "MEDIUM", "LOW"]);
 const recommendationStatusSchema = z.enum(["ACTIVE", "COMPLETED", "DISMISSED", "EXPIRED"]);
 
-const topicSummarySchema = z.object({
+export const topicSummarySchema = z.object({
   id: z.number().int().positive(),
   title: z.string(),
   code: z.string(),

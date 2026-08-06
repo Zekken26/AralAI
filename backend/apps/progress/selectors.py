@@ -250,6 +250,7 @@ def classroom_progress_data(teacher, classroom_id: int) -> dict | None:
     for topic_id, bucket in per_topic.items():
         bucket["submitted_attempts"] = completion.get(topic_id, 0)
         bucket["attempted_students"] = bucket["needs_support"] + bucket["developing"] + bucket["proficient"] + bucket["mastered"]
+        bucket["average_mastery"] = averages[topic_id]
         bucket.pop("scores")
         topic_distribution.append(bucket)
     topic_distribution.sort(key=lambda item: item["topic"]["title"])

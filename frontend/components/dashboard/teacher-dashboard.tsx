@@ -12,6 +12,12 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useTeacherClassrooms } from "@/features/classrooms/hooks/use-teacher-classrooms";
 import { useTeacherLessons } from "@/features/lessons/hooks/use-teacher-lessons";
 import { useTeacherQuizzes } from "@/features/quizzes/hooks/use-teacher-quizzes";
+import {
+  useClassroomAnalytics,
+  useClassroomSupport,
+} from "@/features/analytics/hooks/use-teacher-analytics";
+import { useClassroomQuizResults } from "@/features/quizzes/hooks/use-teacher-quizzes";
+import { displayPercent } from "@/features/analytics/utils/format";
 
 export function TeacherDashboard() {
   const { user } = useAuth();
@@ -109,6 +115,26 @@ export function TeacherDashboard() {
             ))}
           </div>
 
+          {classrooms.length > 0 ? (
+            <section aria-labelledby="dashboard-analytics-heading" className="flex flex-col gap-3">
+              <div>
+                <h2 id="dashboard-analytics-heading" className="text-lg font-semibold text-slate-900">
+                  Analytics at a glance
+                </h2>
+                <p className="text-sm text-slate-600">
+                  Class mastery and support signals for your classrooms.
+                </p>
+              </div>
+              <ul className="grid list-none gap-3 p-0 md:grid-cols-2 xl:grid-cols-3">
+                {classrooms.slice(0, 3).map((classroom) => (
+                  <li key={classroom.id}>
+                    <ClassroomAnalyticsPreview classroomId={classroom.id} name={classroom.name} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           {classrooms.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
               <p className="text-base font-medium text-slate-800">Create your first classroom</p>
@@ -180,5 +206,74 @@ export function TeacherDashboard() {
         </>
       )}
     </div>
+  );
+}
+
+function ClassroomAnalyticsPreview({ classroomId, name }: { classroomId: number; name: string }) {
+  const progressQuery = useClassroomAnalytics(classroomId);
+  const supportQuery = useClassroomSupport(classroomId);
+  const quizResultsQuery = useClassroomQuizResults(classroomId);
+
+  return (
+    <Card className="flex flex-col gap-1">
+      <Link
+        href={ROUTES.teacher.classroomAnalytics(classroomId)}
+        className="w-fit text-base font-semibold text-slate-900 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+      >
+        {name}
+      </Link>
+      {progressQuery.isPending ? (
+        <div className="flex flex-col gap-2" aria-busy="true">
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      ) : progressQuery.isError ? (
+        <p className="text-sm text-slate-500">Analytics unavailable.</p>
+      ) : (
+        <>
+          {progressQuery.data?.attempted_topics === 0 ? (
+            <div className="mt-1 flex flex-col gap-2">
+              <p className="text-sm text-slate-600">No assessments yet.</p>
+              <div className="flex flex-wrap gap-3 text-sm">
+                <Link
+                  href={ROUTES.teacher.lessonCreate}
+                  className="rounded font-medium text-teal-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+                >
+                  Create a lesson
+                </Link>
+                <Link
+                  href={ROUTES.teacher.quizCreate}
+                  className="rounded font-medium text-teal-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+                >
+                  Create a quiz
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-slate-600">
+              Average mastery:{" "}
+              <span className="font-semibold text-slate-800">
+                {displayPercent(progressQuery.data?.class_average_mastery)}
+              </span>
+              {progressQuery.data?.weakest_topics?.[0]
+                ? ` · Weakest: ${progressQuery.data.weakest_topics[0].topic.title}`
+                : ""}
+            </p>
+          )}
+          {supportQuery.isError ? null : supportQuery.data && supportQuery.data.count > 0 ? (
+            <p className="mt-1 inline-flex w-fit rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
+              {supportQuery.data.count} student{supportQuery.data.count === 1 ? "" : "s"} needing
+              support
+            </p>
+          ) : null}
+          {quizResultsQuery.isError ? null : quizResultsQuery.data?.results?.length ? (
+            <p className="text-xs text-slate-600">
+              Latest quiz: {quizResultsQuery.data.results[0].title} ·{" "}
+              {displayPercent(quizResultsQuery.data.results[0].average_score)}
+            </p>
+          ) : null}
+        </>
+      )}
+    </Card>
   );
 }
