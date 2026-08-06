@@ -6,9 +6,9 @@ import { ROUTES } from "@/lib/routes";
 
 const TEACHER_NAV = [
   { href: ROUTES.teacher.dashboard, label: "Dashboard" },
-  { href: ROUTES.teacher.classrooms, label: "Classrooms", placeholder: true },
-  { href: ROUTES.teacher.lessons, label: "Lessons", placeholder: true },
-  { href: ROUTES.teacher.quizzes, label: "Quizzes", placeholder: true },
+  { href: ROUTES.teacher.classrooms, label: "Classrooms" },
+  { href: ROUTES.teacher.lessons, label: "Lessons" },
+  { href: ROUTES.teacher.quizzes, label: "Quizzes" },
   { href: ROUTES.teacher.analytics, label: "Analytics", placeholder: true },
 ];
 

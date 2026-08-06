@@ -13,7 +13,7 @@ test.describe("authentication happy path", () => {
     await page.getByRole("button", { name: /create account/i }).click();
 
     await expect(page).toHaveURL(/\/student\/dashboard$/);
-    await expect(page.getByText(/practice quizzes and track your progress/i)).toBeVisible();
+    await expect(page.getByText(/join classrooms, read lessons, and practice/i)).toBeVisible();
   });
 
   test("registering as a teacher lands on the teacher dashboard", async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe("authentication happy path", () => {
     await page.getByRole("button", { name: /create account/i }).click();
 
     await expect(page).toHaveURL(/\/teacher\/dashboard$/);
-    await expect(page.getByText(/manage classrooms and track class progress/i)).toBeVisible();
+    await expect(page.getByText(/manage classrooms, lessons, and assessments/i)).toBeVisible();
   });
 
   test("a returning user can sign in with the sign-in page", async ({ page }) => {

@@ -37,6 +37,21 @@ python manage.py runserver 8000
 | `npm test`       | Vitest unit + component tests (jsdom, no backend)    |
 | `npm run e2e`    | Playwright against the real backend (see below)      |
 
+## Feature areas
+
+- **Authentication** — register/login, role-based route guards, JWT refresh
+  with rotation (`/login`, `/register`, student + teacher dashboards).
+- **Student learning** — dashboard, classrooms (join via code), published
+  lessons with objectives and content.
+- **Student assessment** — quiz lists, attempts with autosave, results with
+  pass/fail and per-question feedback.
+- **Teacher content management** — classrooms (join codes, student list),
+  lessons (create/publish/archive), quizzes (create, question bank with
+  multiple-choice/numeric questions and approval workflow, publish/archive),
+  attempt review, and per-classroom quiz results.
+- **Teacher dashboard** — stats (classrooms, lessons, quizzes, published
+  questions) with a recent-activity list.
+
 ## Testing
 
 Unit/component tests run in jsdom and mock the network; they need no backend.
@@ -49,6 +64,13 @@ user:
 ```bash
 npm run e2e
 ```
+
+E2E coverage: `auth.spec.ts`, `student-learning.spec.ts`,
+`student-assessment.spec.ts`, and `teacher-content.spec.ts` (the teacher
+content management flow). The spec helpers seed a session by placing the
+refresh token in `sessionStorage`; because the backend rotates refresh
+tokens, each seed is applied only once per explicit call, otherwise the
+app's rotated token is left untouched.
 
 ## Auth contract
 

@@ -41,9 +41,28 @@ async function registerAndLogin(
 }
 
 async function seedSession(page: Page, refresh: string): Promise<void> {
+  // The backend rotates refresh tokens, so the app's first refresh blacklists
+  // the seeded token. A plain addInitScript would re-apply that stale token
+  // on every full navigation, killing the session. Instead, apply a seed
+  // exactly once per explicit seedSession call and otherwise leave the
+  // app's rotated token untouched.
   await page.addInitScript((value) => {
-    window.sessionStorage.setItem("aralai.refresh", value as string);
+    const pending = window.sessionStorage.getItem("aralai.pending-refresh");
+    if (pending != null) {
+      window.sessionStorage.setItem("aralai.refresh", pending);
+      window.sessionStorage.removeItem("aralai.pending-refresh");
+    } else if (window.sessionStorage.getItem("aralai.refresh") == null) {
+      window.sessionStorage.setItem("aralai.refresh", value as string);
+    }
   }, refresh);
+  try {
+    await page.evaluate((value) => {
+      window.sessionStorage.setItem("aralai.pending-refresh", value);
+    }, refresh);
+  } catch {
+    // Not navigated yet (about:blank): the init script's fallback seeds the
+    // token on the first page load.
+  }
 }
 
 async function mathTopicId(request: APIRequestContext, token: string): Promise<number> {
@@ -122,38 +141,44 @@ async function joinClassroom(
 async function createQuestion(
   request: APIRequestContext,
   token: string,
-  lessonId: number,
+  quizId: number,
   topicId: number,
 ): Promise<number> {
-  const response = await request.post(`${API_BASE}/lessons/${lessonId}/questions/`, {
+  const created = await request.post(`${API_BASE}/quizzes/${quizId}/questions/`, {
     headers: { Authorization: `Bearer ${token}` },
     data: {
       topic: topicId,
       question_type: "MULTIPLE_CHOICE",
       prompt: "What is 2 + 2?",
       difficulty: 2,
-      points: "1.00",
-      choices: [{ text: "3", sequence_order: 1 }, { text: "4", sequence_order: 2 }],
-      correct_choice: 2,
+      points: 1,
+      sequence_order: 1,
     },
   });
-  expect(response.ok()).toBeTruthy();
-  const question = await response.json();
+  expect(created.ok()).toBeTruthy();
+  const question = await created.json();
+
+  const wrong = await request.post(`${API_BASE}/questions/${question.id}/choices/`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { text: "3", is_correct: false, sequence_order: 1 },
+  });
+  expect(wrong.ok()).toBeTruthy();
+  const correct = await request.post(`${API_BASE}/questions/${question.id}/choices/`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { text: "4", is_correct: true, sequence_order: 2 },
+  });
+  expect(correct.ok()).toBeTruthy();
   return question.id;
 }
 
 async function approveQuestion(
   request: APIRequestContext,
   token: string,
-  lessonId: number,
   questionId: number,
 ): Promise<void> {
-  const response = await request.post(
-    `${API_BASE}/lessons/${lessonId}/questions/${questionId}/approve/`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
+  const response = await request.post(`${API_BASE}/questions/${questionId}/approve/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   expect(response.ok()).toBeTruthy();
 }
 
@@ -204,9 +229,9 @@ test.describe("student assessment flow", () => {
       topicId,
       "E2E Linear Equations",
     );
-    const questionId = await createQuestion(request, teacher.access, lessonId, topicId);
-    await approveQuestion(request, teacher.access, lessonId, questionId);
     const quizId = await createQuiz(request, teacher.access, lessonId, classroom.id, "E2E Quiz");
+    const questionId = await createQuestion(request, teacher.access, quizId, topicId);
+    await approveQuestion(request, teacher.access, questionId);
     await publishQuiz(request, teacher.access, quizId);
 
     const student = await registerAndLogin(request, "STUDENT");
@@ -229,9 +254,9 @@ test.describe("student assessment flow", () => {
       topicId,
       "E2E Algebra",
     );
-    const questionId = await createQuestion(request, teacher.access, lessonId, topicId);
-    await approveQuestion(request, teacher.access, lessonId, questionId);
     const quizId = await createQuiz(request, teacher.access, lessonId, classroom.id, "E2E Algebra Quiz");
+    const questionId = await createQuestion(request, teacher.access, quizId, topicId);
+    await approveQuestion(request, teacher.access, questionId);
     await publishQuiz(request, teacher.access, quizId);
 
     const student = await registerAndLogin(request, "STUDENT");
@@ -239,16 +264,16 @@ test.describe("student assessment flow", () => {
     await seedSession(page, student.refresh);
 
     await page.goto("/student/quizzes");
-    await page.getByRole("link", { name: /E2E Algebra Quiz/i }).first().click();
+    await page.getByRole("link", { name: "View quiz" }).first().click();
     await expect(page.getByRole("heading", { name: "E2E Algebra Quiz" })).toBeVisible();
 
     await page.getByRole("button", { name: /start attempt/i }).click();
     await expect(page.getByRole("heading", { name: /attempt #1/i })).toBeVisible();
 
-    await page.getByRole("radio", { name: /4/ }).check();
+    await page.getByRole("radio", { name: /4/ }).click();
     await page.getByRole("button", { name: /submit attempt/i }).click();
 
-    await expect(page.getByRole("heading", { name: /passed/i })).toBeVisible();
+    await expect(page.getByText("Passed", { exact: true })).toBeVisible();
   });
 
   test("anonymous visitors are redirected to login from quiz pages", async ({ page }) => {

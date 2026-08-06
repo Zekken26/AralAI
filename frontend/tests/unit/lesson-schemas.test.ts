@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { lessonListSchema, lessonSchema, topicSchema } from "@/features/lessons/schemas";
+import { lessonCreateSchema, lessonListSchema, lessonSchema, topicSchema } from "@/features/lessons/schemas";
 
 const validLesson = {
   id: 1,
@@ -72,6 +72,55 @@ describe("lessonListSchema", () => {
       next: null,
       previous: null,
       results: [{ id: 1, title: "incomplete" }],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("lessonCreateSchema", () => {
+  it("accepts valid create values", () => {
+    const result = lessonCreateSchema.safeParse({
+      topic: 3,
+      classroom: 2,
+      title: "Solving Linear Equations",
+      summary: "An introduction to one-variable equations.",
+      learning_objectives: ["Solve linear equations.", "Check solutions."],
+      content: "Example: 2x + 3 = 7.",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a missing topic", () => {
+    const result = lessonCreateSchema.safeParse({
+      classroom: 2,
+      title: "Solving Linear Equations",
+      summary: "",
+      learning_objectives: [""],
+      content: "Example.",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty title", () => {
+    const result = lessonCreateSchema.safeParse({
+      topic: 3,
+      classroom: 2,
+      title: "   ",
+      summary: "",
+      learning_objectives: [""],
+      content: "Example.",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a non-numeric classroom id", () => {
+    const result = lessonCreateSchema.safeParse({
+      topic: 3,
+      classroom: "two",
+      title: "Solving Linear Equations",
+      summary: "",
+      learning_objectives: [""],
+      content: "Example.",
     });
     expect(result.success).toBe(false);
   });

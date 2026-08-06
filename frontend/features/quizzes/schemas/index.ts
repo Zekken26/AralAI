@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { paginatedSchema } from "@/types/pagination";
 
-const quizStatusSchema = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
-const questionTypeSchema = z.enum(["MULTIPLE_CHOICE", "NUMERIC"]);
+export const quizStatusSchema = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
+export const questionTypeSchema = z.enum(["MULTIPLE_CHOICE", "NUMERIC"]);
 const attemptStatusSchema = z.enum(["IN_PROGRESS", "SUBMITTED", "EXPIRED"]);
 
 export const quizSchema = z.object({

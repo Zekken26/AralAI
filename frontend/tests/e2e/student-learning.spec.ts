@@ -45,15 +45,29 @@ async function registerAndLogin(
   return { email, access: tokens.access, refresh: tokens.refresh };
 }
 
-/**
- * Seed an app session without a UI sign-in by placing the refresh token in
- * sessionStorage. The API client's refresh interceptor picks it up on the
- * first authenticated request and establishes the session.
- */
 async function seedSession(page: Page, refresh: string): Promise<void> {
+  // The backend rotates refresh tokens, so the app's first refresh blacklists
+  // the seeded token. A plain addInitScript would re-apply that stale token
+  // on every full navigation, killing the session. Instead, apply a seed
+  // exactly once per explicit seedSession call and otherwise leave the
+  // app's rotated token untouched.
   await page.addInitScript((value) => {
-    window.sessionStorage.setItem("aralai.refresh", value as string);
+    const pending = window.sessionStorage.getItem("aralai.pending-refresh");
+    if (pending != null) {
+      window.sessionStorage.setItem("aralai.refresh", pending);
+      window.sessionStorage.removeItem("aralai.pending-refresh");
+    } else if (window.sessionStorage.getItem("aralai.refresh") == null) {
+      window.sessionStorage.setItem("aralai.refresh", value as string);
+    }
   }, refresh);
+  try {
+    await page.evaluate((value) => {
+      window.sessionStorage.setItem("aralai.pending-refresh", value);
+    }, refresh);
+  } catch {
+    // Not navigated yet (about:blank): the init script's fallback seeds the
+    // token on the first page load.
+  }
 }
 
 async function mathTopicId(request: APIRequestContext, token: string): Promise<number> {

@@ -45,7 +45,7 @@ def test_student_can_view_own_submitted_result(
     assert float(body["score"]) == 100
     result = {item["question"]: item for item in body["questions"]}
     assert result[mc.id]["correct_choice"] == right.id
-    assert result[numeric.id]["numeric_answer"] == 4
+    assert result[numeric.id]["numeric_answer"] == "4.0000000000"
 
 
 @pytest.mark.django_db
@@ -121,7 +121,7 @@ def test_post_submission_result_includes_explanations_and_correct_answers(
     result = {item["question"]: item for item in body["questions"]}
     assert result[mc.id]["explanation"] == "Because subtracting 4 then dividing by 2 gives 4."
     assert result[mc.id]["correct_choice"] == right.id
-    assert result[numeric.id]["numeric_answer"] == 4
+    assert result[numeric.id]["numeric_answer"] == "4.0000000000"
 
 
 @pytest.mark.django_db
@@ -184,6 +184,11 @@ def test_results_summary_for_owner(
     assert body["submitted_attempts"] == 1
     assert body["students"][0]["attempts"] == 1
     assert body["students"][0]["passed_attempts"] == 1
+    # Decimal fields are always serialized as strings so the frontend schema
+    # can rely on a single representation (numbers would fail zod parsing).
+    assert isinstance(body["average_score"], str)
+    assert isinstance(body["pass_rate"], str)
+    assert isinstance(body["students"][0]["best_score"], str)
 
 
 @pytest.mark.django_db

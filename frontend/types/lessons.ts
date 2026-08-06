@@ -59,3 +59,18 @@ export type Lesson = z.infer<typeof lessonSchema>;
 
 export const lessonListSchema = paginatedSchema(lessonSchema);
 export type LessonList = z.infer<typeof lessonListSchema>;
+
+/**
+ * Teacher create/update lesson form (LessonCreateSerializer / LessonUpdateSerializer).
+ * `topic` and `classroom` are plain integer ids; objectives are plain strings.
+ */
+export const lessonCreateSchema = z.object({
+  topic: z.number({ message: "Choose a topic." }).int().positive(),
+  classroom: z.number({ message: "Choose a classroom." }).int().positive(),
+  title: z.string().trim().min(1, "Enter a lesson title.").max(200, "The title is too long."),
+  summary: z.string().max(2000, "The summary is too long."),
+  learning_objectives: z.array(z.string().trim().min(1, "Objectives cannot be empty.")),
+  content: z.string().min(1, "Lesson content cannot be empty."),
+});
+
+export type LessonCreateValues = z.infer<typeof lessonCreateSchema>;

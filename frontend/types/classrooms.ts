@@ -19,7 +19,7 @@ export type Classroom = z.infer<typeof classroomSchema>;
 export const classroomListSchema = paginatedSchema(classroomSchema);
 export type ClassroomList = z.infer<typeof classroomListSchema>;
 
-/** Join-code input. Codes are generated uppercase; the backend matches exactly. */
+/** Join classroom invite. Codes are generated uppercase; the backend matches exactly. */
 export const joinClassroomCodeSchema = z
   .string()
   .trim()
@@ -34,3 +34,44 @@ export const joinClassroomResponseSchema = z.object({
 });
 
 export type JoinClassroomResponse = z.infer<typeof joinClassroomResponseSchema>;
+
+/** Non-sensitive student summary inside an enrollment (UserSummarySerializer). */
+export const enrollmentStudentSchema = z.object({
+  id: z.number().int(),
+  first_name: z.string(),
+  last_name: z.string(),
+});
+
+export type EnrollmentStudent = z.infer<typeof enrollmentStudentSchema>;
+
+/** Teacher-facing enrollment row (EnrollmentSerializer). */
+export const enrollmentSchema = z.object({
+  id: z.number().int().positive(),
+  student: enrollmentStudentSchema,
+  status: z.string(),
+  joined_at: z.string(),
+});
+
+export type Enrollment = z.infer<typeof enrollmentSchema>;
+
+export const enrollmentListSchema = paginatedSchema(enrollmentSchema);
+export type EnrollmentList = z.infer<typeof enrollmentListSchema>;
+
+/** Teacher create-classroom form (ClassroomCreateSerializer). */
+export const classroomCreateSchema = z.object({
+  name: z.string().trim().min(1, "Enter a classroom name.").max(200, "The name is too long."),
+  section: z.string().trim().max(100, "The section is too long.").optional(),
+  school_year: z.string().trim().max(50, "The school year is too long.").optional(),
+});
+
+export type ClassroomCreateValues = z.infer<typeof classroomCreateSchema>;
+
+/** Teacher update-classroom form (ClassroomUpdateSerializer). */
+export const classroomUpdateSchema = z.object({
+  name: z.string().trim().min(1, "Enter a classroom name.").max(200, "The name is too long."),
+  section: z.string().trim().max(100, "The section is too long.").optional(),
+  school_year: z.string().trim().max(50, "The school year is too long.").optional(),
+  is_active: z.boolean(),
+});
+
+export type ClassroomUpdateValues = z.infer<typeof classroomUpdateSchema>;

@@ -22,8 +22,20 @@ export const ROUTES = {
   teacher: {
     dashboard: "/teacher/dashboard",
     classrooms: "/teacher/classrooms",
+    classroomCreate: "/teacher/classrooms/create",
+    classroomDetail: (classroomId: number | string) => `/teacher/classrooms/${classroomId}`,
+    classroomStudents: (classroomId: number | string) =>
+      `/teacher/classrooms/${classroomId}/students`,
     lessons: "/teacher/lessons",
+    lessonCreate: "/teacher/lessons/create",
+    lessonDetail: (lessonId: number | string) => `/teacher/lessons/${lessonId}`,
+    lessonEdit: (lessonId: number | string) => `/teacher/lessons/${lessonId}/edit`,
     quizzes: "/teacher/quizzes",
+    quizCreate: "/teacher/quizzes/create",
+    quizDetail: (quizId: number | string) => `/teacher/quizzes/${quizId}`,
+    quizEdit: (quizId: number | string) => `/teacher/quizzes/${quizId}/edit`,
+    quizQuestions: (quizId: number | string) => `/teacher/quizzes/${quizId}/questions`,
+    quizResults: (quizId: number | string) => `/teacher/quizzes/${quizId}/results`,
     analytics: "/teacher/analytics",
   },
 } as const;

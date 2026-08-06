@@ -15,6 +15,13 @@ from apps.quizzes.models import (
 )
 
 
+def _decimal_string(value: Decimal | None) -> str | None:
+    """Render a decimal as a plain string, matching DRF's DecimalField output."""
+    if value is None:
+        return None
+    return str(value)
+
+
 class QuizCreateSerializer(serializers.Serializer):
     lesson = serializers.IntegerField()
     classroom = serializers.IntegerField()
@@ -406,11 +413,11 @@ class AttemptResultSerializer(serializers.ModelSerializer):
                     "prompt": q.prompt,
                     "question_type": q.question_type,
                     "selected_choice": answer.selected_choice_id if answer else None,
-                    "numeric_response": answer.numeric_response if answer else None,
+                    "numeric_response": _decimal_string(answer.numeric_response) if answer else None,
                     "is_correct": bool(answer.is_correct) if answer else False,
-                    "points_awarded": answer.points_awarded if answer else "0.00",
+                    "points_awarded": _decimal_string(answer.points_awarded) if answer else "0.00",
                     "correct_choice": correct_choice,
-                    "numeric_answer": q.numeric_answer,
+                    "numeric_answer": _decimal_string(q.numeric_answer),
                     "explanation": q.explanation,
                 }
             )
@@ -482,11 +489,11 @@ class AttemptAnalyticsSerializer(serializers.ModelSerializer):
                     "prompt": q.prompt,
                     "question_type": q.question_type,
                     "selected_choice": answer.selected_choice_id if answer else None,
-                    "numeric_response": answer.numeric_response if answer else None,
+                    "numeric_response": _decimal_string(answer.numeric_response) if answer else None,
                     "is_correct": bool(answer.is_correct) if answer else False,
-                    "points_awarded": answer.points_awarded if answer else "0.00",
+                    "points_awarded": _decimal_string(answer.points_awarded) if answer else "0.00",
                     "correct_choice": correct_choice,
-                    "numeric_answer": q.numeric_answer,
+                    "numeric_answer": _decimal_string(q.numeric_answer),
                 }
             )
         return items
@@ -567,7 +574,10 @@ class QuizResultsSummarySerializer(serializers.Serializer):
                 attempt.submitted_at and attempt.submitted_at > row["last_submitted_at"]
             ):
                 row["last_submitted_at"] = attempt.submitted_at
-        return list(rows.values())
+        return [
+            {**row, "best_score": _decimal_string(row["best_score"])}
+            for row in rows.values()
+        ]
 
 
 class ClassroomQuizResultsSerializer(serializers.ModelSerializer):

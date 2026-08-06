@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  classroomCreateSchema,
   classroomListSchema,
   classroomSchema,
+  enrollmentListSchema,
+  enrollmentSchema,
   joinClassroomCodeSchema,
   joinClassroomResponseSchema,
 } from "@/features/classrooms/schemas";
@@ -84,6 +87,62 @@ describe("joinClassroomCodeSchema", () => {
 
   it("rejects an over-long code", () => {
     expect(joinClassroomCodeSchema.safeParse("A".repeat(17)).success).toBe(false);
+  });
+});
+
+describe("classroomCreateSchema", () => {
+  it("accepts valid create values", () => {
+    const result = classroomCreateSchema.safeParse({
+      name: "Grade 8 - Section A",
+      section: "A",
+      school_year: "2026-2027",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts missing optional section and school year", () => {
+    const result = classroomCreateSchema.safeParse({ name: "Grade 8" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an empty name", () => {
+    expect(classroomCreateSchema.safeParse({ name: "   " }).success).toBe(false);
+  });
+});
+
+describe("enrollmentSchema", () => {
+  it("accepts an enrollment with an embedded student summary", () => {
+    const result = enrollmentSchema.safeParse({
+      id: 4,
+      student: { id: 9, first_name: "Ana", last_name: "Cruz" },
+      status: "ACTIVE",
+      joined_at: "2026-08-05T10:00:00Z",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an enrollment without the nested student", () => {
+    expect(
+      enrollmentSchema.safeParse({ id: 4, status: "ACTIVE", joined_at: "2026-08-05T10:00:00Z" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("accepts a paginated enrollment list", () => {
+    const result = enrollmentListSchema.safeParse({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [
+        {
+          id: 4,
+          student: { id: 9, first_name: "Ana", last_name: "Cruz" },
+          status: "ACTIVE",
+          joined_at: "2026-08-05T10:00:00Z",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
   });
 });
 
