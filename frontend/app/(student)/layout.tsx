@@ -7,10 +7,10 @@ import { ROUTES } from "@/lib/routes";
 const STUDENT_NAV = [
   { href: ROUTES.student.dashboard, label: "Dashboard" },
   { href: ROUTES.student.classrooms, label: "Classrooms" },
-  { href: ROUTES.student.lessons, label: "Lessons", placeholder: true },
+  { href: ROUTES.student.lessons, label: "Lessons" },
   { href: ROUTES.student.quizzes, label: "Quizzes" },
-  { href: ROUTES.student.progress, label: "Progress", placeholder: true },
-  { href: ROUTES.student.recommendations, label: "Recommendations", placeholder: true },
+  { href: ROUTES.student.progress, label: "Progress" },
+  { href: ROUTES.student.recommendations, label: "Recommendations" },
 ];
 
 export default function StudentLayout({ children }: { children: ReactNode }) {

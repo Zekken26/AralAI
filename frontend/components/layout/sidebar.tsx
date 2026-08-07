@@ -6,8 +6,6 @@ import { usePathname } from "next/navigation";
 export type NavItem = {
   href: string;
   label: string;
-  /** Placeholder routes are not functional in this milestone. */
-  placeholder?: boolean;
 };
 
 function isActive(pathname: string, href: string): boolean {
@@ -37,11 +35,6 @@ export function Sidebar({ items, title }: { items: NavItem[]; title: string }) {
             }`}
           >
             {item.label}
-            {item.placeholder ? (
-              <span className="ml-2 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
-                Soon
-              </span>
-            ) : null}
           </Link>
         );
       })}
